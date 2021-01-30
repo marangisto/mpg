@@ -77,6 +77,11 @@ template<> void handler<AUX_TIMER_ISR>()
     mult100::update();
 }
 
+static void send(axis_t axis, uint8_t mult, int16_t incr)
+{
+    printf<serial>("%s %u %d\n", to_string(axis), mult, incr);
+}
+
 int main()
 {
     led::setup();
@@ -111,8 +116,6 @@ int main()
     stop::setup<pull_up>();
     indic::setup();
 
-//    int32_t last_pos = encoder::count();
-
     axis_t axis = NO_AXIS, last_axis = static_cast<axis_t>(-1);
     uint8_t multiplier = 1, last_multiplier = 0;
     uint16_t time_out = 0;
@@ -131,7 +134,7 @@ int main()
 
         if (!stop::pressed())
         {
-            printf<serial>("stop\n");
+            printf<serial>("STOP\n");
             sys_tick::delay_ms(100);
             continue;
         }
@@ -145,8 +148,7 @@ int main()
 
         if (multiplier != last_multiplier)
         {
-            //printf<serial>("multplier = %u\n", multiplier);
-            printf<serial>("%s %d\n", to_string(axis), multiplier);
+            send(axis, multiplier, 0);
             last_multiplier = multiplier;
         }
 
@@ -181,7 +183,7 @@ int main()
 
         if (axis != last_axis)
         {
-            printf<serial>("%s %d\n", to_string(axis), multiplier);
+            send(axis, multiplier, 0);
             last_axis = axis;
         }
 
@@ -190,12 +192,7 @@ int main()
         if (count != last_count)
         {
             if (axis != NO_AXIS)
-                printf<serial>
-                    ( "%s %d %d\n"
-                    , to_string(axis)
-                    , count - last_count
-                    , multiplier
-                    );
+                send(axis, multiplier, count - last_count);
             last_count = count;
         }
 
