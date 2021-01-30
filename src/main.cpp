@@ -30,6 +30,7 @@ using mult100 = button_t<PB5>;
 
 using stop = button_t<PA9>;
 
+using led = output_t<PA5>;
 using indic = output_t<PB3>;
 
 using serial = usart_t<SERIAL_USART, SERIAL_TX, NO_PIN>;
@@ -66,6 +67,7 @@ static void process()
     static uint8_t last_multiplier = 0;
     static uint16_t time_out = 0;
     static int16_t last_count = 0;
+    static uint32_t i = 0;
 
     if (mult1::read())
         msg.mult = 1;
@@ -128,6 +130,19 @@ static void process()
         }
         last_count = count;
     }
+
+    if (msg.axis != NO_AXIS)
+    {
+        if (msg.mult == 1)
+            indic::set();
+        else if ((i & (msg.mult == 100 ? 0x3 : 0xf)) == 0)
+            indic::toggle();
+    }
+    else
+        indic::clear();
+
+
+    ++i;    // count invokations
 }
 
 template<> void handler<AUX_TIMER_ISR>()
@@ -187,13 +202,14 @@ int main()
 
     stop::setup<pull_up>();
     indic::setup();
+    led::setup();
 
     for (uint32_t i = 0;; ++i)
     {
         message_t msg;
 
         if (i % 500 == 0)
-            indic::toggle();
+            led::toggle();
 
         if (!stop::pressed())
         {
