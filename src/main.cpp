@@ -73,8 +73,6 @@ template<> void handler<AUX_TIMER_ISR>()
     mult1::update();
     mult10::update();
     mult100::update();
-
-    probe::toggle();
 }
 
 int main()
@@ -115,15 +113,16 @@ int main()
 
     axis_t axis = NO_AXIS, last_axis = static_cast<axis_t>(-1);
     uint8_t multiplier = 1, last_multiplier = 0;
+    uint16_t time_out = 0;
 
-    for (uint16_t i = 0;; ++i)
+    for (uint32_t i = 0;; ++i)
     {
-        if ((i & 0xf0) == 0)
+        probe::set();
+
+        if (i % 500 == 0)
             led::toggle();
-        if ((i & 0xf0) == 0)
+        if (i % 500 == 0)
             indic::toggle();
- 
-//        sys_tick::delay_ms(100);
 
         if (axisX::read())
             axis = X;
@@ -137,6 +136,22 @@ int main()
             axis = B;
         if (axisC::read())
             axis = C;
+
+        if ( !axisX::pressed()
+          && !axisY::pressed()
+          && !axisZ::pressed()
+          && !axisA::pressed()
+          && !axisB::pressed()
+          && !axisC::pressed()
+          )
+        {
+            if (time_out > 100)
+                axis = NO_AXIS;
+            else
+                time_out++;
+        }
+        else
+            time_out = 0;
 
         if (axis != last_axis)
         {
@@ -156,6 +171,9 @@ int main()
             printf<serial>("multplier = %u\n", multiplier);
             last_multiplier = multiplier;
         }
+
+        probe::clear();
+        sys_tick::delay_ms(1);
     }
 }
 
