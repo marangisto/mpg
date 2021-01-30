@@ -59,6 +59,88 @@ static const char *to_string(axis_t x)
     }
 }
 
+struct message_t
+{
+    axis_t  axis;
+    uint8_t mult;
+    int16_t count;
+};
+
+using fifo = fifo_t<message_t, 0, 8>;
+
+static void process()
+{
+    static message_t msg = { NO_AXIS, 1, 0 };
+    static axis_t last_axis = static_cast<axis_t>(-1);
+    static uint8_t last_multiplier = 0;
+    static uint16_t time_out = 0;
+    static int16_t last_count = 0;
+
+    probe::set();
+
+    if (mult1::read())
+        msg.mult = 1;
+    if (mult10::read())
+        msg.mult = 10;
+    if (mult100::read())
+        msg.mult = 100;
+
+    if (msg.mult != last_multiplier)
+    {
+        msg.count = 0;
+        fifo::put(msg);
+        last_multiplier = msg.mult;
+    }
+
+    if (axisX::read())
+        msg.axis = X;
+    if (axisY::read())
+        msg.axis = Y;
+    if (axisZ::read())
+        msg.axis = Z;
+    if (axisA::read())
+        msg.axis = A;
+    if (axisB::read())
+        msg.axis = B;
+    if (axisC::read())
+        msg.axis = C;
+
+    if ( !axisX::pressed()
+      && !axisY::pressed()
+      && !axisZ::pressed()
+      && !axisA::pressed()
+      && !axisB::pressed()
+      && !axisC::pressed()
+      )
+    {
+        if (time_out > 2)
+            msg.axis = NO_AXIS;
+        else
+            time_out++;
+    }
+    else
+        time_out = 0;
+
+    if (msg.axis != last_axis)
+    {
+        msg.count = 0;
+        fifo::put(msg);
+        last_axis = msg.axis;
+    }
+
+    int16_t count = encoder::count();
+
+    if (count != last_count)
+    {
+        if (msg.axis != NO_AXIS)
+        {
+            msg.count = count - last_count;
+            fifo::put(msg);
+        }
+        last_count = count;
+    }
+}
+
 template<> void handler<AUX_TIMER_ISR>()
 {
     aux::clear_update_interrupt_flag();
@@ -75,6 +157,11 @@ template<> void handler<AUX_TIMER_ISR>()
     mult1::update();
     mult10::update();
     mult100::update();
+
+    static uint32_t i = 0;
+
+    if ((i++ & 0x1f) == 0)
+        process();
 }
 
 static void send(axis_t axis, uint8_t mult, int16_t incr)
@@ -116,15 +203,10 @@ int main()
     stop::setup<pull_up>();
     indic::setup();
 
-    axis_t axis = NO_AXIS, last_axis = static_cast<axis_t>(-1);
-    uint8_t multiplier = 1, last_multiplier = 0;
-    uint16_t time_out = 0;
-    int16_t last_count = 0;
-
-    encoder::set_count(0);
-
     for (uint32_t i = 0;; ++i)
     {
+        message_t msg;
+
         probe::set();
 
         if (i % 500 == 0)
@@ -136,66 +218,12 @@ int main()
         {
             printf<serial>("STOP\n");
             sys_tick::delay_ms(100);
-            last_count = encoder::count();  // avoid accumulating garbage!
-            continue;
+
+            while (fifo::get(msg))
+                ; // discard any messages during stop
         }
-
-        if (mult1::read())
-            multiplier = 1;
-        if (mult10::read())
-            multiplier = 10;
-        if (mult100::read())
-            multiplier = 100;
-
-        if (multiplier != last_multiplier)
-        {
-            send(axis, multiplier, 0);
-            last_multiplier = multiplier;
-        }
-
-        if (axisX::read())
-            axis = X;
-        if (axisY::read())
-            axis = Y;
-        if (axisZ::read())
-            axis = Z;
-        if (axisA::read())
-            axis = A;
-        if (axisB::read())
-            axis = B;
-        if (axisC::read())
-            axis = C;
-
-        if ( !axisX::pressed()
-          && !axisY::pressed()
-          && !axisZ::pressed()
-          && !axisA::pressed()
-          && !axisB::pressed()
-          && !axisC::pressed()
-          )
-        {
-            if (time_out > 100)
-                axis = NO_AXIS;
-            else
-                time_out++;
-        }
-        else
-            time_out = 0;
-
-        if (axis != last_axis)
-        {
-            send(axis, multiplier, 0);
-            last_axis = axis;
-        }
-
-        int16_t count = encoder::count();
-
-        if (count != last_count)
-        {
-            if (axis != NO_AXIS)
-                send(axis, multiplier, count - last_count);
-            last_count = count;
-        }
+        else if (fifo::get(msg))
+            send(msg.axis, msg.mult, msg.count);
 
         probe::clear();
         sys_tick::delay_ms(1);
