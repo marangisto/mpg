@@ -3,14 +3,8 @@
 #include <button.h>
 #include <timer.h>
 
-static const pin_t          LED = PA5;
-static const pin_t          BTN = PC13;
-static const pin_t          PROBE = PA8;
-
 static const int            SERIAL_USART = 2;
 static const pin_t          SERIAL_TX = PA2;
-static const pin_t          SERIAL_RX = PA3;
-static const interrupt_t    SERIAL_ISR = interrupt::USART2;
 
 static const int            ENC_TIMER_NO = 3;
 static const pin_t          ENC_CH1 = PA6;
@@ -18,9 +12,6 @@ static const pin_t          ENC_CH2 = PA7;
 
 static const int            AUX_TIMER_NO = 7;
 static const interrupt_t    AUX_TIMER_ISR = interrupt::TIM7;
-
-using led = output_t<LED>;
-using probe = output_t<PROBE>;
 
 using aux = tim_t<AUX_TIMER_NO>;
 
@@ -41,7 +32,7 @@ using stop = button_t<PA9>;
 
 using indic = output_t<PB3>;
 
-using serial = usart_t<SERIAL_USART, SERIAL_TX, SERIAL_RX>;
+using serial = usart_t<SERIAL_USART, SERIAL_TX, NO_PIN>;
 
 enum axis_t { NO_AXIS, X, Y, Z, A, B, C };
 
@@ -75,8 +66,6 @@ static void process()
     static uint8_t last_multiplier = 0;
     static uint16_t time_out = 0;
     static int16_t last_count = 0;
-
-    probe::set();
 
     if (mult1::read())
         msg.mult = 1;
@@ -171,11 +160,7 @@ static void send(axis_t axis, uint8_t mult, int16_t incr)
 
 int main()
 {
-    led::setup();
-    probe::setup();
     serial::setup<230400>();
-    interrupt::set<SERIAL_ISR>();
-    interrupt::enable();
 
     printf<serial>("MPG Version 0.1\n");
 
@@ -207,10 +192,6 @@ int main()
     {
         message_t msg;
 
-        probe::set();
-
-        if (i % 500 == 0)
-            led::toggle();
         if (i % 500 == 0)
             indic::toggle();
 
@@ -225,7 +206,6 @@ int main()
         else if (fifo::get(msg))
             send(msg.axis, msg.mult, msg.count);
 
-        probe::clear();
         sys_tick::delay_ms(1);
     }
 }
