@@ -116,6 +116,9 @@ int main()
     axis_t axis = NO_AXIS, last_axis = static_cast<axis_t>(-1);
     uint8_t multiplier = 1, last_multiplier = 0;
     uint16_t time_out = 0;
+    int16_t last_count = 0;
+
+    encoder::set_count(0);
 
     for (uint32_t i = 0;; ++i)
     {
@@ -131,6 +134,20 @@ int main()
             printf<serial>("stop\n");
             sys_tick::delay_ms(100);
             continue;
+        }
+
+        if (mult1::read())
+            multiplier = 1;
+        if (mult10::read())
+            multiplier = 10;
+        if (mult100::read())
+            multiplier = 100;
+
+        if (multiplier != last_multiplier)
+        {
+            //printf<serial>("multplier = %u\n", multiplier);
+            printf<serial>("%s %d\n", to_string(axis), multiplier);
+            last_multiplier = multiplier;
         }
 
         if (axisX::read())
@@ -164,21 +181,22 @@ int main()
 
         if (axis != last_axis)
         {
-            printf<serial>("%s\n", to_string(axis));
+            printf<serial>("%s %d\n", to_string(axis), multiplier);
             last_axis = axis;
         }
 
-        if (mult1::read())
-            multiplier = 1;
-        if (mult10::read())
-            multiplier = 10;
-        if (mult100::read())
-            multiplier = 100;
+        int16_t count = encoder::count();
 
-        if (multiplier != last_multiplier)
+        if (count != last_count)
         {
-            printf<serial>("multplier = %u\n", multiplier);
-            last_multiplier = multiplier;
+            if (axis != NO_AXIS)
+                printf<serial>
+                    ( "%s %d %d\n"
+                    , to_string(axis)
+                    , count - last_count
+                    , multiplier
+                    );
+            last_count = count;
         }
 
         probe::clear();
