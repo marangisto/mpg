@@ -136,6 +136,7 @@ int main()
         {
             printf<serial>("STOP\n");
             sys_tick::delay_ms(100);
+            last_count = encoder::count();  // avoid accumulating garbage!
             continue;
         }
 
