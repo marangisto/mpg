@@ -1,163 +1,99 @@
-#include <gpio.h>
 #include <textio.h>
-#include <hardware/tm1637.h>
-#include <math.h>
+#include <usart.h>
+#include <button.h>
+#include <timer.h>
 
 static const pin_t          LED = PA5;
 static const pin_t          BTN = PC13;
-static const input_type_t   BTN_TYPE = pull_up;
-//static const interrupt_t    BTN_ISR = interrupt::EXTI4_15;
 static const pin_t          PROBE = PA8;
-static const pin_t          A0 = PA0;
-static const pin_t          A1 = PA1;
-static const pin_t          A2 = PA4;
-static const pin_t          A3 = PB1;
-static const pin_t          A4 = PB11;
-static const pin_t          A5 = PB12;
 
 static const int            SERIAL_USART = 2;
 static const pin_t          SERIAL_TX = PA2;
 static const pin_t          SERIAL_RX = PA3;
 static const interrupt_t    SERIAL_ISR = interrupt::USART2;
 
-static const int            TIMER_NO = 3;
-static const interrupt_t    TIMER_ISR = interrupt::TIM3;
-static const pin_t          TIMER_CH1 = PA6;
-static const pin_t          TIMER_CH2 = PA7;
+static const int            ENC_TIMER_NO = 3;
+static const pin_t          ENC_CH1 = PA6;
+static const pin_t          ENC_CH2 = PA7;
+
+static const int            AUX_TIMER_NO = 7;
+static const interrupt_t    AUX_TIMER_ISR = interrupt::TIM7;
 
 using led = output_t<LED>;
 using probe = output_t<PROBE>;
 
-using disp0 = tm1637_t<4, 1, 1, PC6, PC8>;
-using disp1 = tm1637_t<4, 1, 2, PA11, PA12>;
-using disp2 = tm1637_t<4, 1, 3, PB11, PB12>;
+using aux = tim_t<AUX_TIMER_NO>;
 
-using encoder = encoder_t<3, PA6, PA7>;
+using encoder = encoder_t<ENC_TIMER_NO, ENC_CH1, ENC_CH2>;
 
-using axisX = input_t<PB2>;
-using axisY = input_t<PB1>;
-using axisZ = input_t<PB15>;
-using axisA = input_t<PB14>;
-using axisB = input_t<PB13>;
-using axisC = input_t<PC4>;
+using axisX = button_t<PB2>;
+using axisY = button_t<PB1>;
+using axisZ = button_t<PB15>;
+using axisA = button_t<PB14>;
+using axisB = button_t<PB13>;
+using axisC = button_t<PC4>;
 
-using mult1 = input_t<PB10>;
-using mult10 = input_t<PB4>;
-using mult100 = input_t<PB5>;
+using mult1 = button_t<PB10>;
+using mult10 = button_t<PB4>;
+using mult100 = button_t<PB5>;
 
 using stop = input_t<PA9>;
 
 using indic = output_t<PB3>;
 
-enum axis_t { X, Y, Z, A, B, C, NO_AXIS };
+using serial = usart_t<SERIAL_USART, SERIAL_TX, SERIAL_RX>;
 
-template<typename DISPLAY>
-void write(axis_t x)
+enum axis_t { NO_AXIS, X, Y, Z, A, B, C };
+
+static const char *to_string(axis_t x)
 {
-    const char *p = "Off";
-    char str[8];
-
     switch (x)
     {
-        case X: p = "X"; break;
-        case Y: p = "Y"; break;
-        case Z: p = "Z"; break;
-        case A: p = "A"; break;
-        case B: p = "B"; break;
-        case C: p = "C"; break;
-        default: ;
+        case X: return "X"; break;
+        case Y: return "Y"; break;
+        case Z: return "Z"; break;
+        case A: return "A"; break;
+        case B: return "B"; break;
+        case C: return "C"; break;
+        default: return "NONE";
     }
-
-    sprintf(str, "%-6s", p);
-    DISPLAY::write_string(str);
 }
 
-template<typename DISPLAY>
-void write(float x)
+template<> void handler<AUX_TIMER_ISR>()
 {
-    char str[8];
+    aux::clear_update_interrupt_flag();
 
-    sprintf(str, "%7.4f", x);
-    DISPLAY::write_string(str);
+    axisX::update();
+    axisY::update();
+    axisZ::update();
+    axisA::update();
+    axisB::update();
+    axisC::update();
+
+    mult1::update();
+    mult10::update();
+    mult100::update();
+
+    probe::toggle();
 }
-
-template<typename DISPLAY>
-void write(uint8_t x)
-{
-    char str[8];
-
-    sprintf(str, "%6x", x);
-    DISPLAY::write_string(str);
-}
-
-template<typename DISPLAY>
-void write(uint16_t x)
-{
-    char str[8];
-
-    sprintf(str, "%6x", x);
-    DISPLAY::write_string(str);
-}
-
-template<typename DISPLAY>
-void write(uint32_t x)
-{
-    char str[8];
-
-    sprintf(str, "%06lx", x);
-    DISPLAY::write_string(str);
-}
-
-template<typename DISPLAY>
-void write(bool x)
-{
-    DISPLAY::write_string(x ? "True  " : "False ");
-}
-
-template<typename DISPLAY>
-void write(const char *s)
-{
-    DISPLAY::write_string(s);
-}
-
-
-static axis_t read_axis()
-{
-    if (!axisX::read())
-        return X;
-    if (!axisY::read())
-        return Y;
-    if (!axisZ::read())
-        return Z;
-    if (!axisA::read())
-        return A;
-    if (!axisB::read())
-        return B;
-    if (!axisC::read())
-        return C;
-    else
-        return NO_AXIS;
-}
-
-/*
-static uint8_t read_mult()
-{
-    if (!mult100::read())
-        return 100;
-    else if (!mult10::read())
-        return 10;
-    else
-        return 1;
-}
-*/
 
 int main()
 {
     led::setup();
     probe::setup();
-    disp0::setup<10000>();
-    disp1::setup<10000>();
-    disp2::setup<10000>();
+    serial::setup<230400>();
+    interrupt::set<SERIAL_ISR>();
+    interrupt::enable();
+
+    printf<serial>("MPG Version 0.1\n");
+
+    const auto f_tim = 1000;
+    const auto psc = 1000;
+    const auto arr = aux::clock() / ((psc + 1) * f_tim) - 1;
+
+    aux::setup(psc, arr);
+    aux::enable_update_interrupt();
+    interrupt::set<AUX_TIMER_ISR>();
 
     encoder::setup<floating>(-1);
 
@@ -175,19 +111,51 @@ int main()
     stop::setup<pull_up>();
     indic::setup();
 
+//    int32_t last_pos = encoder::count();
+
+    axis_t axis = NO_AXIS, last_axis = static_cast<axis_t>(-1);
+    uint8_t multiplier = 1, last_multiplier = 0;
+
     for (uint16_t i = 0;; ++i)
     {
         if ((i & 0xf0) == 0)
             led::toggle();
         if ((i & 0xf0) == 0)
             indic::toggle();
-        probe::set();
-        write<disp0>(read_axis());
-        //write<disp1>(read_mult());
-        write<disp1>(encoder::count());
-        write<disp2>(stop::read() ? "E-STOP" : "Ok!   ");
-        probe::clear();
+ 
 //        sys_tick::delay_ms(100);
+
+        if (axisX::read())
+            axis = X;
+        if (axisY::read())
+            axis = Y;
+        if (axisZ::read())
+            axis = Z;
+        if (axisA::read())
+            axis = A;
+        if (axisB::read())
+            axis = B;
+        if (axisC::read())
+            axis = C;
+
+        if (axis != last_axis)
+        {
+            printf<serial>("%s\n", to_string(axis));
+            last_axis = axis;
+        }
+
+        if (mult1::read())
+            multiplier = 1;
+        if (mult10::read())
+            multiplier = 10;
+        if (mult100::read())
+            multiplier = 100;
+
+        if (multiplier != last_multiplier)
+        {
+            printf<serial>("multplier = %u\n", multiplier);
+            last_multiplier = multiplier;
+        }
     }
 }
 
