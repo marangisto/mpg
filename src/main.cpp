@@ -37,7 +37,7 @@ using mult1 = button_t<PB10>;
 using mult10 = button_t<PB4>;
 using mult100 = button_t<PB5>;
 
-using stop = input_t<PA9>;
+using stop = button_t<PA9>;
 
 using indic = output_t<PB3>;
 
@@ -62,6 +62,8 @@ static const char *to_string(axis_t x)
 template<> void handler<AUX_TIMER_ISR>()
 {
     aux::clear_update_interrupt_flag();
+
+    stop::update();
 
     axisX::update();
     axisY::update();
@@ -123,6 +125,13 @@ int main()
             led::toggle();
         if (i % 500 == 0)
             indic::toggle();
+
+        if (!stop::pressed())
+        {
+            printf<serial>("stop\n");
+            sys_tick::delay_ms(100);
+            continue;
+        }
 
         if (axisX::read())
             axis = X;
