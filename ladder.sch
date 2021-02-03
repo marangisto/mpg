@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 6 6
+Sheet 6 7
 Title ""
 Date ""
 Rev ""
@@ -14,13 +14,13 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L Device:R R12
+L Device:R R13
 U 1 1 602C3C0C
 P 4850 2350
-AR Path="/602C38D4/602C3C0C" Ref="R12"  Part="1" 
-AR Path="/603130AB/602C3C0C" Ref="R17"  Part="1" 
-AR Path="/60321D0F/602C3C0C" Ref="R20"  Part="1" 
-F 0 "R20" H 4920 2396 50  0000 L CNN
+AR Path="/602C38D4/602C3C0C" Ref="R13"  Part="1" 
+AR Path="/603130AB/602C3C0C" Ref="R18"  Part="1" 
+AR Path="/60321D0F/602C3C0C" Ref="R21"  Part="1" 
+F 0 "R21" H 4920 2396 50  0000 L CNN
 F 1 "1k" H 4920 2305 50  0000 L CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 4780 2350 50  0001 C CNN
 F 3 "~" H 4850 2350 50  0001 C CNN
@@ -28,13 +28,13 @@ F 3 "~" H 4850 2350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:R R13
+L Device:R R14
 U 1 1 602C3CDC
 P 4850 2750
-AR Path="/602C38D4/602C3CDC" Ref="R13"  Part="1" 
-AR Path="/603130AB/602C3CDC" Ref="R18"  Part="1" 
-AR Path="/60321D0F/602C3CDC" Ref="R21"  Part="1" 
-F 0 "R21" H 4920 2796 50  0000 L CNN
+AR Path="/602C38D4/602C3CDC" Ref="R14"  Part="1" 
+AR Path="/603130AB/602C3CDC" Ref="R19"  Part="1" 
+AR Path="/60321D0F/602C3CDC" Ref="R22"  Part="1" 
+F 0 "R22" H 4920 2796 50  0000 L CNN
 F 1 "470" H 4920 2705 50  0000 L CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 4780 2750 50  0001 C CNN
 F 3 "~" H 4850 2750 50  0001 C CNN
@@ -42,13 +42,13 @@ F 3 "~" H 4850 2750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:R R14
+L Device:R R15
 U 1 1 602C41F1
 P 4850 3150
-AR Path="/602C38D4/602C41F1" Ref="R14"  Part="1" 
-AR Path="/603130AB/602C41F1" Ref="R19"  Part="1" 
-AR Path="/60321D0F/602C41F1" Ref="R22"  Part="1" 
-F 0 "R22" H 4920 3196 50  0000 L CNN
+AR Path="/602C38D4/602C41F1" Ref="R15"  Part="1" 
+AR Path="/603130AB/602C41F1" Ref="R20"  Part="1" 
+AR Path="/60321D0F/602C41F1" Ref="R23"  Part="1" 
+F 0 "R23" H 4920 3196 50  0000 L CNN
 F 1 "1k2" H 4920 3105 50  0000 L CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 4780 3150 50  0001 C CNN
 F 3 "~" H 4850 3150 50  0001 C CNN
