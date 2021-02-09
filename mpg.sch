@@ -153,21 +153,21 @@ F 3 "~" H 7800 9900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5450 9700 5750 9700
+	5400 9700 5750 9700
 $Comp
 L Device:Ferrite_Bead FB?
 U 1 1 6017CB65
-P 5300 9700
+P 5250 9700
 AR Path="/5F2EFD7F/6017CB65" Ref="FB?"  Part="1" 
 AR Path="/6017CB65" Ref="FB1"  Part="1" 
 AR Path="/5FF0E759/6017CB65" Ref="FB?"  Part="1" 
 AR Path="/61500A32/6017CB65" Ref="FB?"  Part="1" 
 AR Path="/60152FAB/6017CB65" Ref="FB?"  Part="1" 
-F 0 "FB1" V 5026 9700 50  0000 C CNN
-F 1 "Ferrite_Bead" V 5117 9700 50  0000 C CNN
-F 2 "Inductor_SMD:L_0603_1608Metric" V 5230 9700 50  0001 C CNN
-F 3 "~" H 5300 9700 50  0001 C CNN
-	1    5300 9700
+F 0 "FB1" V 4976 9700 50  0000 C CNN
+F 1 "Ferrite_Bead" V 5067 9700 50  0000 C CNN
+F 2 "Inductor_SMD:L_0603_1608Metric" V 5180 9700 50  0001 C CNN
+F 3 "~" H 5250 9700 50  0001 C CNN
+	1    5250 9700
 	0    1    1    0   
 $EndComp
 Wire Wire Line
@@ -241,17 +241,17 @@ $EndComp
 $Comp
 L power:+12V #PWR?
 U 1 1 6017CC57
-P 5000 9450
+P 5750 9450
 AR Path="/5F2EFD7F/6017CC57" Ref="#PWR?"  Part="1" 
 AR Path="/6017CC57" Ref="#PWR010"  Part="1" 
 AR Path="/5FF0E759/6017CC57" Ref="#PWR?"  Part="1" 
 AR Path="/61500A32/6017CC57" Ref="#PWR?"  Part="1" 
 AR Path="/60152FAB/6017CC57" Ref="#PWR?"  Part="1" 
-F 0 "#PWR010" H 5000 9300 50  0001 C CNN
-F 1 "+12V" H 5000 9590 50  0000 C CNN
-F 2 "" H 5000 9450 50  0001 C CNN
-F 3 "" H 5000 9450 50  0001 C CNN
-	1    5000 9450
+F 0 "#PWR010" H 5750 9300 50  0001 C CNN
+F 1 "+12V" H 5750 9590 50  0000 C CNN
+F 2 "" H 5750 9450 50  0001 C CNN
+F 3 "" H 5750 9450 50  0001 C CNN
+	1    5750 9450
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -272,8 +272,6 @@ F 3 "~" H 4200 9700 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	4750 9700 4750 9450
-Wire Wire Line
-	5000 9450 5000 9700
 $Comp
 L power:PWR_FLAG #FLG?
 U 1 1 6017CC84
@@ -291,9 +289,6 @@ F 3 "" H 4750 9450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Connection ~ 4750 9700
-Connection ~ 5000 9700
-Wire Wire Line
-	5000 9700 4750 9700
 Wire Wire Line
 	5750 10500 5750 10600
 Wire Wire Line
@@ -2200,10 +2195,12 @@ Wire Wire Line
 Wire Wire Line
 	3900 2400 4000 2400
 Wire Wire Line
-	5000 9700 5150 9700
-Wire Wire Line
 	5750 9800 5750 9700
 Connection ~ 5750 9700
 Wire Wire Line
 	5750 9700 6250 9700
+Wire Wire Line
+	4750 9700 5100 9700
+Wire Wire Line
+	5750 9450 5750 9700
 $EndSCHEMATC
